@@ -39,5 +39,53 @@ Let's now go through the paramter file.
     par_file = '%s/data_reduce_params_bb.py' %src_dir
     copy_par = True
 
-The first thing to set is the 
+The first thing to set is the full path to the directory 
+containing the scripts here.  You can also decide if you 
+want the paramter file copied to the output directory 
+(specified later).  This is useful to have a record of 
+what parameters were set for a given processing run.
+
+Next we define the input and output data:
+
+    #########################
+    ##  Input/Output Data  ##
+    #########################
+    
+    # Directory where data files are
+    #   Note:  might have a different name if running in Docker
+    indir = '/output'
+    
+    # Input file name
+    infile = 'slcp-200us.fil'
+    
+    # Base name for output data products
+    outbase = 'slcp-22m045'
+    
+    # Directory where everything will go
+    #   Note:  might have a different name if running in Docker
+    outdir = '/output'
+
+The `indir` is the path to the directory containing the input 
+data file `infile`.  The `outbase` is the base name for the 
+output files and intermediate products (which will have various 
+things appended to it).  The `outdir` is the path to the 
+output directory.  **NOTE: the output directory should already 
+exist before running this pipeline.**
+
+The next step deals with the working directory:
+
+    ###################
+    ##  Working Dir  ##
+    ###################
+    
+    # Directory where we are doing work
+    # (For now just leave as outdir)
+    workdir = outdir
+
+In principle, you may want to do the processing in a 
+directory different from where the output files are sent.
+We can add this later, but for now you need to just leave it 
+the same as the output directory.
+
+
 
