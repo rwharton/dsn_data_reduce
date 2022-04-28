@@ -8,6 +8,8 @@
 ##  Processing Scripts  ##
 ##########################
 
+# Directory containing all the scripts here
+#   Note:  might have a different name if running in Docker  
 src_dir = '/src'
 par_file = '%s/data_reduce_params_bb.py' %src_dir
 copy_par = True
@@ -20,8 +22,14 @@ copy_par = True
 #   Note:  might have a different name if running in Docker  
 indir = '/output'
 
+# Input file name 
 infile = 'slcp-200us.fil'
+
+# Base name for output data products
 outbase = 'slcp-22m045'
+
+# Directory where everything will go
+#   Note:  might have a different name if running in Docker  
 outdir = '/output'
 
 ###################
@@ -29,7 +37,8 @@ outdir = '/output'
 ###################
 
 # Directory where we are doing work
-workdir = '/output' 
+# (For now just leave as outdir)
+workdir = outdir
 
 
 #################
@@ -51,7 +60,7 @@ nchan_win   = 32
 ##  RA / DEC  ##
 ################
 
-# Not sure if we really need this 
+# RA and Dec strings needed for prepfil
 ra_str  = "050803.54"
 dec_str = "+260338.4"
 
@@ -67,6 +76,10 @@ bpass_tmin = 5.0
 ###########################
 ##  rfifind RFI masking  ##
 ###########################
+
+# rfifind paramters.  A "1" indicates the rfifind step 
+# done during bandpass.  A "2" indicates the rfifind 
+# done after the averaging filter.
 
 rfi_time     = 0.0 
 rfi_chanfrac = 0.1 

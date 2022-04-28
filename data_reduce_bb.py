@@ -260,34 +260,6 @@ def combine_subbands(infiles):
     return outfile, tdur
 
 
-def filter_60Hz(infile):
-    """
-    Run the 60, 120, 180 Hz filter on data
-    """
-    tstart = time.time()
-
-    src_dir = par.src_dir
-    nproc   = par.filter_nproc
-
-    inbase = get_inbase(infile)
-    outfile = "%s_60Hz.corr" %(inbase)
-    
-    filter_cmd = "python " +\
-                 "%s/m_fb_60hzfilter_parallel.py " %src_dir +\
-                 "--inputFilename %s " %infile +\
-                 "--outputFilename %s " %outfile +\
-                 "--numProcessors %d " %nproc +\
-                 "--clean" 
-    
-    print(filter_cmd)
-    call(filter_cmd, shell=True)
-
-    tstop = time.time()
-    tdur = tstop - tstart 
-
-    return outfile, tdur
-
-
 def get_comma_strings(f0, nharm, width):
     """
     Turn lists into comma separated strings
@@ -512,7 +484,7 @@ def organize_output():
     """
     organize output files into folders
 
-    NOTE: We are assuming everything already in outputd dir
+    NOTE: We are assuming everything already in output dir
     """
     top_dir = par.outdir 
 
@@ -588,6 +560,7 @@ def main():
     print("##################################################")
     print("")    
     print("Bandpass:           %.1f minutes" %(bpass_time/60.))
+    print("Baseline:           %.1f minutes" %(avg_time/60.))
     print("") 
     print("Total Time:         %.1f minutes" %(total_time/60.))
      
