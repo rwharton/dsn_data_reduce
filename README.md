@@ -153,4 +153,147 @@ should be at least 3 times the spin period of the pulsar
 you are looking at.  The other parameter sets the max number 
 of processes to be spawned for the filtering.  
 
+## Output 
+
+## Running in Docker
+
+Because we have a bit of a delicate dependency ecosystem here, 
+it can be useful to use a docker image with everything on it.  
+Here we'll give a very short example for how to do that.
+
+First, you want to make sure you have the docker image on your 
+machine.  You can see what images are there by running:
+
+    docker images
+
+which will give output like this:
+
+    REPOSITORY     TAG       IMAGE ID       CREATED        SIZE
+    dsn_soft       latest    5a68f31b291c   2 months ago   7.6GB
+    dsn_pearlman   latest    5a68f31b291c   2 months ago   7.6GB
+    ubuntu         focal     54c9d81cbb44   2 months ago   72.8MB
+
+for this, we want to use `dsn_soft`.
+
+Before we run anything, we want to make sure we know our data 
+directory, output directory, and source directory.  For this test 
+example I will use a 2-min snippet of R67 data.
+
+The filterbank file `srcp-0001.fil` is in:
+
+    /export/data1/wharton/example/fil
+
+and I want the results of the processing to go in 
+
+    /export/data1/wharton/example/proc
+
+I have the source files for running the pipeline in:
+
+    /home/wharton/software/scripts/pipeline
+
+When we run docker, we will need to specify the volumes we want 
+to have access to, so we will need to include these.  We will also 
+be able to give them simpler names.
+
+Now we are going to make the docker command to create our docker 
+environment.  If your processing is expected to take a long time 
+and you are just using a terminal, you might want to start a screen 
+session now.
+
+To start our docker environment we run the following command:
+
+    docker run -e DISPLAY -v $HOME/.Xauthority:/home/psr/.Xauthority --net=host --rm -ti -v /export/data1/wharton/example/fil:/data -v /export/data1/wharton/example/proc:/output -v /home/wharton/software/scripts/pipeline:/src dsn_soft bash
+
+There's a lot going on there, so let's break it down.  A simplified version 
+of this would just be:
+
+    docker run --rm -ti dsn_soft bash
+
+which means to run the docker image `dsn_soft` in interactive mode `-ti` and 
+kill the environment when we are done `--rm`.  Within the environment run 
+the command `bash`.   So basically this just gives us a terminal within the 
+docker virtual environment.  You can try just running this if you want.  If 
+you do you will see a directory called `software` where we have installed 
+all the software we need.  But the larger filesystem is not accessible.  
+
+We mount other directories using the `-v` option.  For example:
+
+    -v /export/data1/wharton/example/fil:/data
+
+This takes the directory `/export/data1/wharton/example/fil` and mounts 
+it as `/data` in the docker environment.  You can just try that out if 
+you want:
+
+    docker run --rm -ti -v /export/data1/wharton/example/fil:/data dsn_soft bash
+
+If you run that you will now see a `/data`:
+
+    root@8d8e31ecc2f6 [28 Apr 2022 22:05] ~> ls /data
+    srcp-0001.fil
+
+If you create a file here in the docker environment it will show up in the 
+real filesystem as well.  Same if you remove something.  You should be a little 
+careful about this because in the docker environment you have root permissions. 
+If you kill something in the docker environment, it will die in real life too.
+
+OK, the last part of the long command was this stuff:
+
+    -e DISPLAY -v $HOME/.Xauthority:/home/psr/.Xauthority --net=host
+
+This is needed to make x11 forwarding work, which you might want.
+
+OK, let's now set up our parameter file, taking in mind the names of 
+our directories will change in docker based on what we have called them 
+in the docker command.  
+
+We'll now make the following edits in the `data_reduce_params_bb.py` file:
+
+    ##########################
+    ##  Processing Scripts  ##
+    ##########################
+    src_dir = '/src'
+    
+    #########################
+    ##  Input/Output Data  ##
+    #########################
+    indir = '/data'
+    infile = 'srcp-0001.fil'
+    outbase = 'test'
+    outdir = '/output'
+    
+    ################
+    ##  RA / DEC  ##
+    ################
+    ra_str  = "050803.54"
+    dec_str = "+260338.4"
+
+OK, so now we are ready to go.  
+
+Let's run the docker command above:
+
+    docker run -e DISPLAY -v $HOME/.Xauthority:/home/psr/.Xauthority --net=host --rm -ti -v /export/data1/wharton/example/fil:/data -v /export/data1/wharton/example/proc:/output -v /home/wharton/software/scripts/pipeline:/src dsn_soft bash
+
+which will take you into the docker environment.  You can double check that 
+the data and src directories point where you think:
+
+    root@tefim2 [28 Apr 2022 22:26] ~> ls /data
+    srcp-0001.fil
+    
+    root@tefim2 [28 Apr 2022 22:26] ~> ls /src
+    README.md              data_reduce_bb.py         fb_utils.py
+    m_fb_freq_filter_parallel_new.py
+    bandpass_threshold.py  data_reduce_params_bb.py  m_fb_filter_norm_jit.py  
+    m_fb_zapchan.py
+
+and things look correct.
+
+So now we just run the pipeline script:
+
+    root@tefim2 [28 Apr 2022 22:29] ~> python /src/data_reduce_bb.py
+
+and you should get some information about the ongoing processing.
+
+
+
+
 
