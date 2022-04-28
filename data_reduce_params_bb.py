@@ -41,21 +41,6 @@ outdir = '/output'
 workdir = outdir
 
 
-#################
-##  Zap Chans  ##
-#################
-
-# Note that this will calc bpass with FULL data set
-# May need / want to change this later
-
-# Pars for filtering.  Diff thresh is the max fractional 
-# deviation from running median.  Val thresh is min val. 
-# nchan_win is window size for running stats
-diff_thresh = 0.10
-val_thresh  = 0.10 
-nchan_win   = 32
-
-
 ################
 ##  RA / DEC  ##
 ################
@@ -95,13 +80,5 @@ rfi_freqsig  = 16.0
 # Time const should be ~3 x Pspin
 avg_filter_timeconst = 10.0 # Pspin = 1.36
 avg_filter_nproc     = 30
-
-
-###################################
-##  Clean Up Intermediate Files  ##
-###################################
-
-# If true, delete intermediate *.corr files
-cleanup = True
 
 

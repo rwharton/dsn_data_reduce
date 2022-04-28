@@ -87,5 +87,70 @@ directory different from where the output files are sent.
 We can add this later, but for now you need to just leave it 
 the same as the output directory.
 
+The next bit specifies the RA and Dec strings:
+
+    ################
+    ##  RA / DEC  ##
+    ################
+    
+    # RA and Dec strings needed for prepfil
+    ra_str  = "050803.54"
+    dec_str = "+260338.4"
+
+these are needed for `prepfil`.
+
+Next we set the time (in minutes) at the beginning of the obs 
+to use for finding a bandpass with `prepfil`:
+
+    ###########################
+    ##  Bandpass Correction  ##
+    ###########################
+    
+    # Time (minutes) to use for bpass solution
+    bpass_tmin = 5.0
+
+I have been using 5 minutes and that seems to work.
+
+Next are params for various runs of `rfifind`:
+
+    ###########################
+    ##  rfifind RFI masking  ##
+    ###########################
+    
+    # rfifind paramters.  A "1" indicates the rfifind step
+    # done during bandpass.  A "2" indicates the rfifind
+    # done after the averaging filter.
+    
+    rfi_time     = 0.0
+    rfi_chanfrac = 0.1
+    rfi_clip1    = 1.5  # before avg filter
+    rfi_clip2    = 0.0  # after avg filter
+    rfi_freqsig  = 16.0
+
+The pipeline runs `rfifind` two times during processing and 
+you may want things to be slightly different for each pass.  The 
+first run of `rfifind` is when the bandpass is calculated.  We 
+calculate and apply a preliminary bandpass, then run `rfifind`, 
+then calculate and apply the next bandpass.  This mitigates any 
+effects of very strong RFI on the bandpass.  The second run is 
+after the running average filter.  Paramters with a 1 indicate 
+the `rfifind` run during bandpass and the 1 indicates the run 
+after the running average filter.
+
+Next is the moving average filter:
+
+    #############################
+    ##  Moving Average Filter  ##
+    #############################
+    
+    # Time const should be ~3 x Pspin
+    avg_filter_timeconst = 10.0 # Pspin = 1.36
+    avg_filter_nproc     = 30
+
+This is the one parameter that will likely be the most 
+dependent on your observing target.  The time constant 
+should be at least 3 times the spin period of the pulsar 
+you are looking at.  The other parameter sets the max number 
+of processes to be spawned for the filtering.  
 
 
