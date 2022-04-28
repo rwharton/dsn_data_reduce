@@ -20,7 +20,7 @@ copy_par = True
 
 # Directory where data files are
 #   Note:  might have a different name if running in Docker  
-indir = '/output'
+indir = '/data'
 
 # Input file name 
 infile = 'slcp-200us.fil'
