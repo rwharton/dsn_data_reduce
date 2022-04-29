@@ -155,6 +155,26 @@ of processes to be spawned for the filtering.
 
 ## Output 
 
+There will be a lot of output information detailing what 
+step is being run and the progress. When the pipeline 
+processing is done, there will be a time summary like this:
+
+    ##################################################
+    ##              TIME SUMMARY                    ##
+    ##################################################
+    
+    Bandpass:           17.3 minutes
+    Baseline:           29.6 minutes
+    
+    Total Time:         47.0 minutes
+
+which gives the time per step and the total end to end time.
+
+The processed data products will be in specified output directory. 
+This will include the final file, a copy of the parameter file, 
+the bandpass solutions, and the rfi masks.
+
+
 ## Running in Docker
 
 Because we have a bit of a delicate dependency ecosystem here, 
@@ -291,7 +311,8 @@ So now we just run the pipeline script:
 
     root@tefim2 [28 Apr 2022 22:29] ~> python /src/data_reduce_bb.py
 
-and you should get some information about the ongoing processing.
+and you should get some information about the ongoing processing.  Check 
+the output directory to see that everything worked.
 
 
 

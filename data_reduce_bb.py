@@ -34,7 +34,15 @@ def get_inbase(infile):
     """
     inbase = infile.rsplit('.', 1)[0]
     return inbase
- 
+
+
+def filename_from_path(inpath):
+    """
+    split path to get filename
+    """
+    fname = inpath.split('/')[-1]
+    return fname
+
 
 def get_filename(basename, subnum, pol):
     """
@@ -329,9 +337,13 @@ def bandpass(infile):
     bpass_time = par.bpass_tmin 
     ra_str     = par.ra_str
     dec_str    = par.dec_str 
-    
-    inbase = get_inbase(infile)
-    bfile1 = "%s_bp.corr" %(inbase)
+
+    workdir = par.workdir
+   
+    infile_name = filename_from_path(infile) 
+    inbase = get_inbase(infile_name)
+    outbase = "%s/%s" %(workdir, inbase)
+    bfile1 = "%s_bp.corr" %(outbase)
 
     bp1_cmd = "prepfil " +\
               "--bandpass=%.2f " %bpass_time +\
@@ -347,7 +359,7 @@ def bandpass(infile):
     rfi_clip1    = par.rfi_clip1 
     rfi_freqsig  = par.rfi_freqsig 
 
-    rfi_base = "%s_bp" %inbase 
+    rfi_base = "%s_bp" %outbase 
     
     rfi_cmd = "rfifind " +\
               "-time %.2f " %rfi_time +\
@@ -360,7 +372,7 @@ def bandpass(infile):
     call(rfi_cmd, shell=True)
 
     # Now we run bandpass again with the rfi mask 
-    bfile2 = "%s_bp_rfi.corr" %(inbase)
+    bfile2 = "%s_bp_rfi.corr" %(outbase)
     mask_file  = "%s_rfifind.mask" %rfi_base
 
     bp2_cmd = "prepfil " +\
