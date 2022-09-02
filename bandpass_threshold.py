@@ -16,11 +16,54 @@ import numpy as np
 import matplotlib.pyplot as plt
 import copy
 import time
+import multiprocessing as mp
 
 from subprocess import call
 
+def run_bp(infile, bpfile):
+    bp_cmd = "bandpass %s > %s" %(infile, bpfile)
+    print(bp_cmd)
+    call(bp_cmd, shell=True)
+    return 
 
 def calc_bandpass(infiles, workdir):
+    """
+    Calculate the bandpasses for a list of input files 
+    using the SIGPROC taksk bandpass
+
+    Will output bandpass for each file as a text file 
+    with the same base as infiles but with "bpass" extension 
+
+    This will calculate the bandpass by averaging over all 
+    the full observation.  We may want to change this later 
+    to do it in segments or something to avoid having to 
+    flag a whole channel.
+
+    Return list of bp_files
+    """
+     
+    bp_files = []
+    tstart = time.time()
+    jobs = []
+    for infile in infiles:
+        infname = infile.rsplit('/')[-1] 
+        inbase  = infname.rsplit('.', 1)[0]
+        bpfile = "%s/%s.bpass" %(workdir, inbase)
+        bp_files.append(bpfile)
+        p = mp.Process(target=run_bp, args=(infile, bpfile))
+        jobs.append(p)
+        p.start()
+
+    for proc in jobs:
+        proc.join()
+
+    tstop = time.time()
+    print("Took %.1f minutes" %( (tstop-tstart)/60.))
+   
+    return bp_files
+
+
+def calc_bandpass_old(infiles, workdir):
     """
     Calculate the bandpasses for a list of input files 
     using the SIGPROC taksk bandpass

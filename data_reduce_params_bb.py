@@ -10,7 +10,7 @@
 
 # Directory containing all the scripts here
 #   Note:  might have a different name if running in Docker  
-src_dir = '/src'
+src_dir = '/src/reduce'
 par_file = '%s/data_reduce_params_bb.py' %src_dir
 copy_par = True
 
@@ -20,17 +20,17 @@ copy_par = True
 
 # Directory where data files are
 #   Note:  might have a different name if running in Docker  
-indir = '/data'
+indir = '/output/rcp'
 
 # Input file name 
-infile = 'slcp-200us.fil'
+infile = 'xrcp.fil'
 
 # Base name for output data products
-outbase = 'slcp-22m045'
+outbase = 'J0901_doy239_rcp'
 
 # Directory where everything will go
 #   Note:  might have a different name if running in Docker  
-outdir = '/output'
+outdir = indir
 
 ###################
 ##  Working Dir  ##
@@ -46,9 +46,17 @@ workdir = outdir
 ################
 
 # RA and Dec strings needed for prepfil
-ra_str  = "050803.54"
-dec_str = "+260338.4"
+# J0901-4046
+ra_str  = "090129.249"
+dec_str = "-404602.984"
 
+# B1929+10
+#ra_str  = "193214.0570"
+#dec_str = "+105933.38"
+
+# M77
+#ra_str  = "024240.71"
+#dec_str = "-000047.86"
 
 ###########################
 ##  Bandpass Correction  ##
@@ -68,7 +76,7 @@ bpass_tmin = 5.0
 
 rfi_time     = 0.0 
 rfi_chanfrac = 0.1 
-rfi_clip1    = 1.5  # before avg filter 
+rfi_clip1    = 1.5  # before avg filter
 rfi_clip2    = 0.0  # after avg filter
 rfi_freqsig  = 16.0 
 
@@ -78,7 +86,7 @@ rfi_freqsig  = 16.0
 #############################
 
 # Time const should be ~3 x Pspin
-avg_filter_timeconst = 10.0 # Pspin = 1.36
+avg_filter_timeconst = 3 # Pspin = 2
 avg_filter_nproc     = 30
 
 

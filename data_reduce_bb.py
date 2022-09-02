@@ -431,6 +431,7 @@ def filter_avg(infile):
     rfi_cmd = "rfifind " +\
               "-time %.2f " %rfi_time +\
               "-chanfrac %.2f " %rfi_chanfrac +\
+              "-clip %.2f " %rfi_clip2 +\
               "-freqsig %.2f " %rfi_freqsig +\
               "-filterbank %s " %avg1_file +\
               "-o %s " %rfi_base
@@ -528,10 +529,10 @@ def organize_output():
     for bpng_file in bpng_files:
         shutil.move(bpng_file, bpass_dir)
 
-    # Copy par file to output
-    par_file = par.par_file 
-    if par.copy_par:
-        shutil.move(par_file, top_dir)
+    ## Copy par file to output
+    #par_file = par.par_file 
+    #if par.copy_par:
+    #    shutil.copy(par_file, top_dir)
 
     return
 
@@ -550,6 +551,10 @@ def main():
 
     # Get file paths based on param file
     infile = check_input_file()
+
+    # Copy par file to out dir
+    if par.copy_par:
+        shutil.copy(par.par_file, par.outdir)
 
     # Bandpass + RFI + Bandpass
     bpass_file, bpass_time = bandpass(infile)
