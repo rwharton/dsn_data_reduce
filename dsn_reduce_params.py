@@ -12,51 +12,8 @@
 #   Note:  might have a different name if running in Docker  
 src_dir = '/src/reduce'
 par_file = '%s/data_reduce_params_bb.py' %src_dir
+info_file = '%s/source_info.txt' %src_dir
 copy_par = True
-
-#########################
-##  Input/Output Data  ##
-#########################
-
-# Directory where data files are
-#   Note:  might have a different name if running in Docker  
-indir = '/output/rcp'
-
-# Input file name 
-infile = 'xrcp.fil'
-
-# Base name for output data products
-outbase = 'J0901_doy239_rcp'
-
-# Directory where everything will go
-#   Note:  might have a different name if running in Docker  
-outdir = indir
-
-###################
-##  Working Dir  ##
-###################
-
-# Directory where we are doing work
-# (For now just leave as outdir)
-workdir = outdir
-
-
-################
-##  RA / DEC  ##
-################
-
-# RA and Dec strings needed for prepfil
-# J0901-4046
-ra_str  = "090129.249"
-dec_str = "-404602.984"
-
-# B1929+10
-#ra_str  = "193214.0570"
-#dec_str = "+105933.38"
-
-# M77
-#ra_str  = "024240.71"
-#dec_str = "-000047.86"
 
 ###########################
 ##  Bandpass Correction  ##
@@ -64,7 +21,6 @@ dec_str = "-404602.984"
 
 # Time (minutes) to use for bpass solution
 bpass_tmin = 5.0
-
 
 ###########################
 ##  rfifind RFI masking  ##
@@ -86,7 +42,7 @@ rfi_freqsig  = 16.0
 #############################
 
 # Time const should be ~3 x Pspin
-avg_filter_timeconst = 3 # Pspin = 2
+avg_filter_timeconst = 5 # Pspin = 2
 avg_filter_nproc     = 30
 
 

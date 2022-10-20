@@ -24,9 +24,11 @@ import filterbank
 import h5py
 from scipy import signal
 from threading import Thread
+from argparse import ArgumentParser
 
-import data_reduce_params_bb as par
+import dsn_reduce_params as par
 import bandpass_threshold as bp_zap
+
 
 def get_inbase(infile):
     """
@@ -44,45 +46,10 @@ def filename_from_path(inpath):
     return fname
 
 
-def get_filename(basename, subnum, pol):
-    """
-    Generate the input file name from basename, 
-    suband number, and polarization
-
-    This may need to be changed if convention changes
-    """
-    fname = "%s_K%d-%s.fil" %(basename, subnum, pol)
-    return fname
-
-
-def freq_sort_files(infiles):
-    """
-    Sort file list in decreasing frequency order
-    """
-    # Get first chan freqs for each file
-    freq_list = []
-    for infile in infiles:
-        hdr = filterbank.read_header(infile)
-        fch1 = hdr[0]['fch1']
-        freq_list.append(fch1)
-
-    # Sort in descending order
-    idx_sort = np.argsort(freq_list)[::-1]
-
-    # Re-order
-    sortfiles = []
-    for idx in idx_sort:
-        sortfiles.append(infiles[idx])
-
-    return sortfiles
-    
-
-def check_input_file():
+def check_input_file(indir, infile):
     """
     make sure input file exists
     """
-    indir    = par.indir 
-    infile   = par.infile
     inpath   = "%s/%s" %(indir, infile)
 
     if not os.path.exists(inpath):
@@ -94,178 +61,6 @@ def check_input_file():
         print("  %s" %inpath)
 
     return inpath
-
-
-def bandpass_zapchans(infiles):
-    """
-    Calculate bandpass using SIGPROC bandpass
-
-    Using those bandpasses, do a median deviation 
-    filter to identify bad channels
-
-    return list of zapchan strings for zapping
-
-    if data will be decimated later, the channel indices 
-    will be converted for use in the decimated data set
-
-    will also produce plots if desired
-    """
-    tstart = time.time()
-
-    workdir = par.workdir
-    diff_thresh = par.diff_thresh
-    val_thresh  = par.val_thresh 
-    nchan_win   = par.nchan_win 
-    dec_factor  = par.chan_dec_factor
-
-    # Generate bpass files (takes a while)
-    bp_files = bp_zap.calc_bandpass(infiles, workdir)
-
-    # Get list of zapchan strings 
-    zap_chans = bp_zap.get_zapchan_strings(bp_files, 
-                                  diff_thresh=diff_thresh,
-                                  val_thresh=val_thresh,
-                                  nchan_win=nchan_win, 
-                                  dec_factor=dec_factor, 
-                                  saveplots=True)
-
-    tstop = time.time()
-    tdur = tstop - tstart
-
-    return zap_chans, tdur
-
-
-def decimate_chans(infiles):
-    """
-    Decimate infiles by factor specified in par file
-
-    Return output files and time
-    """
-    tstart = time.time()
-
-    workdir = par.workdir
-    dec_fac = par.chan_dec_factor 
-
-    outfiles = []
-    for infile in infiles:
-        fin_name  = infile.rsplit('/')[-1]
-        fin_base  = fin_name.rsplit('.')[0]
-        
-        dec_file = "%s/%s_dec%d.corr" %(workdir, fin_base, dec_fac)
-
-        # Do the actual decimation
-        dec_cmd = "decimate -c %d %s > %s" %(dec_fac, infile, dec_file)
-        print(dec_cmd)
-        call(dec_cmd, shell=True)
-
-        # Call splice_fb_nobary again to fix the bug in decimate, 
-        # so that the header of the filterbank is pulsarcentric.
-        tmp_file = "%s/%s_dec%d-tmp.corr" %(workdir, fin_base, dec_fac)
-        splice_cmd = "splice_fb_nobary %s > %s" %(dec_file, tmp_file)
-        print(splice_cmd)
-        call(splice_cmd, shell=True)
-
-        # Now rename tmp file to dec file
-        mv_cmd = "mv %s %s" %(tmp_file, dec_file)
-        print(mv_cmd)
-        call(mv_cmd, shell=True)
-
-        outfiles.append(dec_file)
-
-    tstop = time.time()
-    tdur = tstop - tstart
-
-    return outfiles, tdur
-
-
-def fix_chan_header(infiles):
-    """
-    Fix incorrect channel width in header
-        
-    Will account for decimation
-    """
-    tstart = time.time()
-
-    dec_fac = par.chan_dec_factor 
-    chan_df = par.chan_df
-    new_df = dec_fac * chan_df
-    
-    for infile in infiles:
-        edit_cmd = "filedit -F %.8f %s" %(new_df, infile) 
-        print(edit_cmd)
-        call(edit_cmd, shell=True)
-   
-    tstop = time.time()
-    tdur = tstop - tstart 
-
-    return infiles, tdur
-
-
-def zap_channels(infiles, zapchans):
-    """
-    Zap bad channels as determined from bandpass_zapchans
-
-    infiles is list of data files to zap
-    zapchans is list of strings of channels to zap
-
-    return list of zapped files, which will be in the same 
-    place as input files but with "_zap" appended to the    
-    base file name
-    """
-    tstart = time.time()
-
-    src_dir = par.src_dir
-    outfiles = []
-
-    for ii, infile in enumerate(infiles):
-        inbase = get_inbase(infile)
-        outfile = "%s_zap.corr" %(inbase)
-        zap_str = zapchans[ii]
-    
-        zap_cmd = "python " +\
-                  "%s/m_fb_zapchan.py " %src_dir +\
-                     "--inputFilename %s " %infile +\
-                     "--outputFilename %s " %outfile +\
-                     "--zapChan %s " %zap_str +\
-                     "--clean"
-
-        print(zap_cmd)
-        call(zap_cmd, shell=True)
-
-        outfiles.append(outfile)
-
-    tstop = time.time()
-    tdur = tstop - tstart 
-
-    return outfiles, tdur
-        
-
-def combine_subbands(infiles):
-    """
-    Combine all the subbands into one file
-
-    Files should already be in descending freq order
-    """
-    tstart = time.time()
-
-    workdir = par.workdir
-    outbase = par.outbase
-    dec_factor = par.chan_dec_factor
-    outfile = "%s/%s_dec%d.corr" %(workdir, outbase, dec_factor)
-
-    infiles_str = ""
-    for infile in infiles:
-        infiles_str += infile
-        infiles_str += " " 
-    
-    splice_cmd = "splice_fb_nobary %s > %s" %(infiles_str, outfile)
-    print(splice_cmd)
-    call(splice_cmd, shell=True)
-
-    tstop = time.time()
-    tdur = tstop - tstart
-
-    return outfile, tdur
 
 
 def get_comma_strings(f0, nharm, width):
@@ -323,7 +118,7 @@ def filter_freqs(infile, f0, nharm, width, outfile=None):
     return outfile, tdur
 
 
-def bandpass(infile):
+def bandpass(infile, outdir, outbase, ra_str, dec_str):
     """
     Bandpass correct data
 
@@ -335,14 +130,10 @@ def bandpass(infile):
 
     # First we do a bandpass on input data
     bpass_time = par.bpass_tmin 
-    ra_str     = par.ra_str
-    dec_str    = par.dec_str 
-
-    workdir = par.workdir
    
     infile_name = filename_from_path(infile) 
     inbase = get_inbase(infile_name)
-    outbase = "%s/%s" %(workdir, inbase)
+    outbase = "%s/%s" %(outdir, inbase)
     bfile1 = "%s_bp.corr" %(outbase)
 
     bp1_cmd = "prepfil " +\
@@ -459,12 +250,10 @@ def filter_avg(infile):
     return avg2_file, tdur
 
 
-def rename_output_file(infile):
+def rename_output_file(infile, outdir, outbase):
     """
     Link infile to clear output name
     """
-    outdir  = par.outdir
-    outbase = par.outbase
     outfile = "%s/%s_final.corr" %(outdir, outbase)
 
     # Check that target file doesnt already exist
@@ -493,13 +282,13 @@ def delete_files(flist):
     return
 
 
-def organize_output():
+def organize_output(outdir):
     """
     organize output files into folders
 
     NOTE: We are assuming everything already in output dir
     """
-    top_dir = par.outdir 
+    top_dir = outdir 
 
     # Place for rfifind masks
     mask_dir = "%s/masks" %(top_dir)
@@ -529,14 +318,83 @@ def organize_output():
     for bpng_file in bpng_files:
         shutil.move(bpng_file, bpass_dir)
 
-    ## Copy par file to output
-    #par_file = par.par_file 
-    #if par.copy_par:
-    #    shutil.copy(par_file, top_dir)
-
     return
 
-            
+
+#######################
+##  Get Source Info  ##
+#######################
+
+def radec_fmt(cstr):
+    """
+    Convert hh:mm:ss / dd:mm:ss to SIGPROC
+    header format of hhmmss or ddmmss
+    """
+    ostr = ''.join( cstr.split(':') )
+    return ostr
+
+
+def get_info(name):
+    """
+    Get info for source id "name"
+    """
+    info_file = par.info_file
+
+    src_name = name
+    ra  = "000000.0"
+    dec = "+000000.0"
+    obs_type = 'FRB'
+
+    found = 0
+    with open(info_file, 'r') as fin:
+        for line in fin:
+            if line[0] in ["\n", "#"]:
+                continue
+            cols = line.split()
+            if len(cols) != 5:
+                continue
+            if cols[0] == name:
+                src_name = cols[1]
+                ra = radec_fmt(cols[2])
+                dec = radec_fmt(cols[3])
+                obs_type = cols[4]
+                found = 1
+                break
+            else: pass
+
+    if found == 0:
+        print("")
+        print("WARNING!  Source %s not found in info file!" %(name))
+        print("")
+
+    return src_name, ra, dec, obs_type
+
+
+
+def parse_input():
+    """
+    Use argparse to parse input
+    """
+    prog_desc = "Standard reduction of DSN data"
+    parser = ArgumentParser(description=prog_desc)
+
+    #parser.add_argument('indir', help='Input data directory')
+    parser.add_argument('infile', help='Input file name')
+    parser.add_argument('outdir', help='Output data directory')
+    parser.add_argument('outbase', help='Base of output file (no extension)')
+    parser.add_argument('src', help='Source Name (as in info file)')
+
+    args = parser.parse_args()
+
+    #indir = args.indir
+    outdir = args.outdir
+    infile = args.infile
+    outbase = args.outbase
+    src = args.src
+
+    #return indir, outdir, infile, outbase, src
+    return outdir, infile, outbase, src
+
 
 
 def main():
@@ -549,24 +407,31 @@ def main():
     """
     tstart = time.time()
 
+    # Parse input
+    #indir, outdir, infile, outbase, src = parse_input()
+    outdir, infile, outbase, src = parse_input()
+
+    # Get source info from source_info.txt
+    src_name, ra_str, dec_str, obs_type = get_info(src)
+
     # Get file paths based on param file
-    infile = check_input_file()
+    #infile = check_input_file(indir, infile)
 
     # Copy par file to out dir
     if par.copy_par:
-        shutil.copy(par.par_file, par.outdir)
+        shutil.copy(par.par_file, outdir)
 
     # Bandpass + RFI + Bandpass
-    bpass_file, bpass_time = bandpass(infile)
+    bpass_file, bpass_time = bandpass(infile, outdir, outbase, ra_str, dec_str)
 
     # Running avg baseline filter
     bpass_bl_file, avg_time = filter_avg(bpass_file)
     
     # Rename final cal file to cleaner output name
-    rename_output_file(bpass_bl_file)
+    rename_output_file(bpass_bl_file, outdir, outbase)
 
     # Organize output
-    organize_output()
+    organize_output(outdir)
 
     tstop = time.time()
     total_time = tstop - tstart
