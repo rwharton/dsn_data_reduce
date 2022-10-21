@@ -20,15 +20,24 @@ have not tested it.
 
 ## Instructions 
 
-usage: dsn_reduce.py [-h] infile outdir outbase src
+Basic usage is as follows
 
-Standard reduction of DSN data
-
+    usage: dsn_reduce.py [-h] [-t TCONST] infile outdir outbase src
+    
+    Standard reduction of DSN data
+    
     positional arguments:
-      infile      Input file name
-      outdir      Output data directory
-      outbase     Base of output file (no extension)
-      src         Source Name (as in info file)
-
+      infile                Input file name
+      outdir                Output data directory
+      outbase               Base of output file (no extension)
+      src                   Source Name (as in info file)
+    
     optional arguments:
-      -h, --help  show this help message and exit
+      -h, --help            show this help message and exit
+      -t TCONST, --tconst TCONST
+                            Filter time constant (def: 5.0)
+
+The source name is the "source id" in the "source_info.txt" file. 
+This file contains the RA and Dec for sources that are typically 
+observed.  If your source is not in there, just add it.  The 
+source file should be in the same directory as the scripts.

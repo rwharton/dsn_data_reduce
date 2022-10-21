@@ -186,7 +186,7 @@ def bandpass(infile, outdir, outbase, ra_str, dec_str):
     return bfile2, tdur
 
 
-def filter_avg(infile):
+def filter_avg(infile, tconst):
     """
     Run moving average filter, then rfifind, then apply mask to data
     """
@@ -195,7 +195,7 @@ def filter_avg(infile):
     src_dir = par.src_dir
 
     # First we run the moving average filter
-    avg_tconst = par.avg_filter_timeconst
+    avg_tconst = tconst
     avg_nproc  = par.avg_filter_nproc
 
     inbase = infile.rstrip(".corr")
@@ -383,6 +383,9 @@ def parse_input():
     parser.add_argument('outdir', help='Output data directory')
     parser.add_argument('outbase', help='Base of output file (no extension)')
     parser.add_argument('src', help='Source Name (as in info file)')
+    parser.add_argument('-t', '--tconst',
+                        help='Filter time constant (def: 5.0)',
+                        required=False, type=float)
 
     args = parser.parse_args()
 
@@ -391,9 +394,10 @@ def parse_input():
     infile = args.infile
     outbase = args.outbase
     src = args.src
+    tconst = args.tconst
 
     #return indir, outdir, infile, outbase, src
-    return outdir, infile, outbase, src
+    return outdir, infile, outbase, src, tconst
 
 
 
@@ -408,11 +412,21 @@ def main():
     tstart = time.time()
 
     # Parse input
-    #indir, outdir, infile, outbase, src = parse_input()
-    outdir, infile, outbase, src = parse_input()
+    outdir, infile, outbase, src, tconst = parse_input()
 
     # Get source info from source_info.txt
     src_name, ra_str, dec_str, obs_type = get_info(src)
+
+    # Print pars
+    print("infile: %s" %infile)
+    print("outdir: %s" %outdir)
+    print("outbase: %s" %outbase)
+    print("")
+    print("Source: %s" %src)
+    print("ra:   %s" %ra_str)
+    print("dec: %s" %dec_str)
+    print("tconst: %.2f" %tconst)
+    print("") 
 
     # Get file paths based on param file
     #infile = check_input_file(indir, infile)
@@ -425,7 +439,7 @@ def main():
     bpass_file, bpass_time = bandpass(infile, outdir, outbase, ra_str, dec_str)
 
     # Running avg baseline filter
-    bpass_bl_file, avg_time = filter_avg(bpass_file)
+    bpass_bl_file, avg_time = filter_avg(bpass_file, tconst)
     
     # Rename final cal file to cleaner output name
     rename_output_file(bpass_bl_file, outdir, outbase)

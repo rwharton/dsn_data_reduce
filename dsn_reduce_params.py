@@ -41,8 +41,6 @@ rfi_freqsig  = 16.0
 ##  Moving Average Filter  ##
 #############################
 
-# Time const should be ~3 x Pspin
-avg_filter_timeconst = 5 # Pspin = 2
 avg_filter_nproc     = 30
 
 
