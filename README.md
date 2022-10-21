@@ -24,10 +24,10 @@ usage: dsn_reduce.py [-h] infile outdir outbase src
 
 Standard reduction of DSN data
 
-positional arguments:
-  infile      Input file name
-  outdir      Output data directory
-  outbase     Base of output file (no extension)
+positional arguments:\
+  infile      Input file name\
+  outdir      Output data directory\
+  outbase     Base of output file (no extension)\
   src         Source Name (as in info file)
 
 optional arguments:
