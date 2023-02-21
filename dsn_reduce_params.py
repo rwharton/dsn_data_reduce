@@ -37,6 +37,12 @@ rfi_clip2    = 0.0  # after avg filter
 rfi_freqsig  = 16.0 
 
 
+#########################
+##  Frequency  Filter  ##
+#########################
+
+filter_nproc     = 30
+
 #############################
 ##  Moving Average Filter  ##
 #############################

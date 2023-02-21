@@ -63,6 +63,27 @@ def check_input_file(indir, infile):
     return inpath
 
 
+def parse_zap(zlist):
+    """
+    Parse the list of f0,nh,df strings given as input 
+    into arrays of f0, nh, and df
+    """
+    f0 = []
+    nh = []
+    ww = []
+    for zz in zlist:
+        print(zz)
+        f0_ii, nh_ii, ww_ii = zz.split(',')
+        f0.append( float(f0_ii) )
+        nh.append( int(nh_ii) )
+        ww.append( float(ww_ii) )
+    f0 = np.array(f0)
+    nh = np.array(nh)
+    ww = np.array(ww)
+
+    return f0, nh, ww
+
+
 def get_comma_strings(f0, nharm, width):
     """
     Turn lists into comma separated strings
@@ -386,6 +407,13 @@ def parse_input():
     parser.add_argument('-t', '--tconst',
                         help='Filter time constant (def: 5.0)',
                         required=False, type=float)
+    parser.add_argument('-z', '--zap', 
+           help='Filter frequency - comma separated list giving the '+\
+                'center frequency, the number of harmonics beyond ' +\
+                'fundamental, and width in Hz (e.g., \'60.0,5,1.0\' to '+\
+                '60Hz signal and 5 harmonics with width 1.0Hz.  To zap '+\
+                'multiple frequencies, repeat this argument',
+           action='append', required=False)
 
     args = parser.parse_args()
 
@@ -395,9 +423,10 @@ def parse_input():
     outbase = args.outbase
     src = args.src
     tconst = args.tconst
+    zaplist = args.zap
 
     #return indir, outdir, infile, outbase, src
-    return outdir, infile, outbase, src, tconst
+    return outdir, infile, outbase, src, tconst, zaplist
 
 
 
@@ -412,7 +441,7 @@ def main():
     tstart = time.time()
 
     # Parse input
-    outdir, infile, outbase, src, tconst = parse_input()
+    outdir, infile, outbase, src, tconst, zaplist = parse_input()
 
     # Get source info from source_info.txt
     src_name, ra_str, dec_str, obs_type = get_info(src)
@@ -426,17 +455,33 @@ def main():
     print("ra:   %s" %ra_str)
     print("dec: %s" %dec_str)
     print("tconst: %.2f" %tconst)
+    print("zap: %s" %( "; ".join(zaplist)))
     print("") 
+    #print(zaplist)
 
     # Get file paths based on param file
     #infile = check_input_file(indir, infile)
+    
+    #sys.exit()
 
     # Copy par file to out dir
     if par.copy_par:
         shutil.copy(par.par_file, outdir)
 
+    # Filter out RFI frequencies if specified
+    if len(zaplist):
+        print(zaplist)
+        f0_arr, nharm_arr, width_arr = parse_zap(zaplist)
+        filter_file, filter_time = filter_freqs(infile, f0_arr,
+                                                nharm_arr, width_arr)
+    else:
+        filter_file = infile
+        filter_time = 0.0
+
     # Bandpass + RFI + Bandpass
-    bpass_file, bpass_time = bandpass(infile, outdir, outbase, ra_str, dec_str)
+    #bpass_file, bpass_time = bandpass(infile, outdir, outbase, ra_str, dec_str)
+    bpass_file, bpass_time = bandpass(filter_file, outdir, outbase, 
+                                      ra_str, dec_str)
 
     # Running avg baseline filter
     bpass_bl_file, avg_time = filter_avg(bpass_file, tconst)
@@ -455,6 +500,7 @@ def main():
     print("##              TIME SUMMARY                    ##")
     print("##################################################")
     print("")    
+    print("Filter:             %.1f minutes" %(filter_time/60.))
     print("Bandpass:           %.1f minutes" %(bpass_time/60.))
     print("Baseline:           %.1f minutes" %(avg_time/60.))
     print("") 
