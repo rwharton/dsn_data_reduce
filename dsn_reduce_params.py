@@ -11,7 +11,7 @@
 # Directory containing all the scripts here
 #   Note:  might have a different name if running in Docker  
 src_dir = '/src/reduce'
-par_file = '%s/data_reduce_params_bb.py' %src_dir
+par_file = '%s/dsn_reduce_params.py' %src_dir
 info_file = '%s/source_info.txt' %src_dir
 copy_par = True
 
