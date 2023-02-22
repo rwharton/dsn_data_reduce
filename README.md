@@ -36,9 +36,10 @@ Basic usage is as follows
       -h, --help            show this help message and exit
       -t TCONST, --tconst TCONST
                             Filter time constant (def: 5.0)
-      -z ZAP, --zap ZAP     Filter frequency - comma separated list giving the center frequency, the number of
-                            harmonics beyond fundamental, and width in Hz (e.g., '60.0,5,1.0' to 60Hz signal
-                            and 5 harmonics with width 1.0Hz. To zap multiple frequencies, repeat this argument
+      -z ZAP, --zap ZAP     Filter frequency - comma separated list giving the center frequency, 
+                            the number of harmonics beyond fundamental, and width in Hz 
+                            (e.g., '60.0,5,1.0' to 60Hz signal and 5 harmonics with width 1.0Hz. 
+                            To zap multiple frequencies, repeat this argument
 
 The source name is the "source id" in the "source_info.txt" file. 
 This file contains the RA and Dec for sources that are typically 
