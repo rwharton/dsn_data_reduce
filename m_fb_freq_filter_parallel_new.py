@@ -46,11 +46,15 @@ def butter_bandstop(nyq, cutoff_freq_start, cutoff_freq_stop, order=3):
     cutoff_freq_start = cutoff_freq_start / nyq
     cutoff_freq_stop = cutoff_freq_stop / nyq
     
-    b, a = signal.butter(order,
+    #b, a = signal.butter(order,
+    #                    [cutoff_freq_start, cutoff_freq_stop], 
+    #                    btype="bandstop", analog=False)
+
+    sos = signal.butter(order,
                         [cutoff_freq_start, cutoff_freq_stop], 
-                        btype="bandstop", analog=False)
+                        btype="bandstop", analog=False, output='sos')
     
-    return b, a
+    return sos
 
 
 def get_freqs(f0, nharms, fnyq):
@@ -110,15 +114,17 @@ def fb_filter_harms(fb_data, fb_header, f0, nharms, width,
     
     # Apply filter to one channel of the filterbank file.
     def worker(ichan):
-        fb_data[ichan] = signal.filtfilt(b, a, fb_data[ichan])
+        #fb_data[ichan] = signal.filtfilt(b, a, fb_data[ichan])
+        fb_data[ichan] = signal.sosfiltfilt(sos, fb_data[ichan])
    
     # Apply to all 
     for iFilter in np.arange(0, len(freq_centers), 1):
         print("Filtering frequency: %.1f Hz" %(freq_centers[iFilter]))
         f_start = freq_starts[iFilter]
         f_stop  = freq_stops[iFilter] 
-        b, a = butter_bandstop(nyq, f_start, f_stop, order=3)
-        w, h = signal.freqz(b, a, worN=100000)
+        #b, a = butter_bandstop(nyq, f_start, f_stop, order=3)
+        #w, h = signal.freqz(b, a, worN=100000)
+        sos = butter_bandstop(nyq, f_start, f_stop, order=3)
         
         # Need to parallelize filtering channel by channel.
         ichan = 0
