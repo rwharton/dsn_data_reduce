@@ -275,7 +275,7 @@ def rename_output_file(infile, outdir, outbase):
     """
     Link infile to clear output name
     """
-    outfile = "%s/%s_final.corr" %(outdir, outbase)
+    outfile = "%s/%s_final.fil" %(outdir, outbase)
 
     # Check that target file doesnt already exist
     if os.path.isfile(outfile):
