@@ -406,14 +406,14 @@ def parse_input():
     parser.add_argument('src', help='Source Name (as in info file)')
     parser.add_argument('-t', '--tconst',
                         help='Filter time constant (def: 5.0)',
-                        required=False, type=float)
+                        required=False, type=float, default=5.0)
     parser.add_argument('-z', '--zap', 
            help='Filter frequency - comma separated list giving the '+\
                 'center frequency, the number of harmonics beyond ' +\
                 'fundamental, and width in Hz (e.g., \'60.0,5,1.0\' to '+\
                 '60Hz signal and 5 harmonics with width 1.0Hz.  To zap '+\
                 'multiple frequencies, repeat this argument',
-           action='append', required=False)
+           action='append', required=False, default=[])
 
     args = parser.parse_args()
 
