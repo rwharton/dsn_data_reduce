@@ -19,11 +19,20 @@ def fix_hdr(args):
     if args.telescope_id is not None:
         in_yr.telescope_id = args.telescope_id
     
+    if args.pulsarcentric is not None:
+        in_yr.pulsarcentric = args.pulsarcentric
+    
     if args.machine_id is not None:
         in_yr.machine_id = args.machine_id
-    
+
+    # Replace source name if given    
     if args.source_name is not None:
         in_yr.your_header.source_name = args.source_name
+    # If not, check if source name has annoying byte string
+    else:
+        in_yr.source_name = in_yr.source_name.rsplit(b'\x00')[0]
+        in_yr.your_header.source_name =\
+                         in_yr.your_header.source_name.rsplit('\x00')[0]
 
     my_writer = my.Writer(in_yr, 
                           outdir = './', 
@@ -49,6 +58,9 @@ def parse_input():
                         required=False, type=int)
     parser.add_argument('-src', '--source_name', 
                         help='Source Name',
+                        required=False)
+    parser.add_argument('-pc', '--pulsarcentric', 
+                        help='Pulsarcentric (0=no, 1=yes)',
                         required=False)
     parser.add_argument('-o', '--outbase', 
                         help='Output file basename (no suffix)', 
